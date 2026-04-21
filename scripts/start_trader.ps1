@@ -1,77 +1,112 @@
-# start_trader.ps1 - starts metrics_server (always) + trade_crypto_bot (if token present).
-# Idempotent: stops stale instances first.
-# CRITICAL: sets PYTHONPATH so `from shared.X` imports work when bot is at crypto_bot/*.py.
-
+# start_trader.ps1 - robust launcher using cmd /c (Start-Process -RedirectStd* is fragile on PS 5.1).
 $ErrorActionPreference = "Continue"
 $root = "C:\RazAgent_Trader"
-$python = "python"
 
-# Ensure shared/ is importable from anywhere (needed because bot runs as crypto_bot/trade_crypto_bot.py
-# from cwd=$root, which puts sys.path[0] = crypto_bot/, not $root).
+# Set env for current session AND for spawned children (via cmd /c inheritance).
 $env:PYTHONPATH = $root
 $env:PYTHONUNBUFFERED = "1"
 
-# Log dir
 $logDir = Join-Path $root "logs"
 New-Item -ItemType Directory -Path $logDir -Force | Out-Null
 
-# Stop any stale instances (but keep metrics if already healthy)
+$metricsLog = Join-Path $logDir "metrics_server.log"
+$metricsErr = Join-Path $logDir "metrics_server.err.log"
+$botLog     = Join-Path $logDir "trade_crypto_bot.log"
+$botErr     = Join-Path $logDir "trade_crypto_bot.err.log"
+
+Write-Host "=== start_trader.ps1 ===" -ForegroundColor Cyan
+Write-Host "  root: $root"
+Write-Host "  PYTHONPATH: $env:PYTHONPATH"
+
+# 1. Stop stale
+Write-Host ""
+Write-Host "[1/4] Stopping stale processes..."
 Get-CimInstance Win32_Process -ErrorAction SilentlyContinue |
-    Where-Object { $_.CommandLine -like "*trade_crypto_bot.py*" } |
-    ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
-Start-Sleep -Milliseconds 500
-
-# --- metrics_server ---
-$metricsAlive = $false
-try {
-    $probe = Invoke-WebRequest -Uri "http://127.0.0.1:9100/healthz" -UseBasicParsing -TimeoutSec 2
-    if ($probe.StatusCode -eq 200) {
-        $metricsAlive = $true
-        Write-Host "[OK] metrics_server already running on :9100 (kept)"
+    Where-Object { ($_.CommandLine -like "*RazAgent_Trader*") -and ($_.Name -eq "python.exe") } |
+    ForEach-Object {
+        Write-Host "  stopping stale PID=$($_.ProcessId) cmd=$($_.CommandLine.Substring(0,[Math]::Min(80,$_.CommandLine.Length)))"
+        Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue
     }
-} catch { $metricsAlive = $false }
-
-if (-not $metricsAlive) {
-    $metricsLog = Join-Path $logDir "metrics_server.log"
-    $metricsErr = Join-Path $logDir "metrics_server.err.log"
-    Start-Process -WindowStyle Hidden -FilePath $python `
-                  -ArgumentList "metrics_server.py" `
-                  -WorkingDirectory $root `
-                  -RedirectStandardOutput $metricsLog `
-                  -RedirectStandardError $metricsErr
-    Start-Sleep -Seconds 2
-    Write-Host "[OK] metrics_server started on port 9100"
-}
-
-# --- trade_crypto_bot (only if token in keyring) ---
-$hasToken = & $python -c "import keyring; print('yes' if keyring.get_password('RazAgentTrader','TRADE_CRYPTO_BOT_TOKEN') else 'no')"
-if ($hasToken.Trim() -eq "yes") {
-    $botLog = Join-Path $logDir "trade_crypto_bot.log"
-    $botErr = Join-Path $logDir "trade_crypto_bot.err.log"
-    # Truncate old logs so diagnostic is clean
-    "" | Out-File -FilePath $botLog -Encoding UTF8
-    "" | Out-File -FilePath $botErr -Encoding UTF8
-
-    Start-Process -WindowStyle Hidden -FilePath $python `
-                  -ArgumentList "crypto_bot\trade_crypto_bot.py" `
-                  -WorkingDirectory $root `
-                  -RedirectStandardOutput $botLog `
-                  -RedirectStandardError $botErr
-    Start-Sleep -Seconds 3
-    Write-Host "[OK] trade_crypto_bot started (PYTHONPATH=$root)"
-    Write-Host "     logs: $botLog"
-} else {
-    Write-Host "[SKIP] TRADE_CRYPTO_BOT_TOKEN not in keyring yet"
-}
-
-# Show tail after startup
+Get-NetTCPConnection -LocalPort 9100 -State Listen -ErrorAction SilentlyContinue |
+    ForEach-Object { Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue }
 Start-Sleep -Seconds 2
-$botErr = Join-Path $logDir "trade_crypto_bot.err.log"
-if (Test-Path $botErr) {
-    $errSize = (Get-Item $botErr).Length
-    if ($errSize -gt 0) {
-        Write-Host ""
-        Write-Host "[!] trade_crypto_bot.err.log has content:" -ForegroundColor Yellow
-        Get-Content $botErr -Tail 10
+
+# 2. Verify python
+Write-Host ""
+Write-Host "[2/4] Python check..."
+$pyCheck = & python --version 2>&1 | Out-String
+Write-Host "  python --version: $($pyCheck.Trim())"
+if (-not ($pyCheck -match "Python 3")) {
+    Write-Host "  [FATAL] 'python' not resolving to Python 3. Check PATH." -ForegroundColor Red
+    exit 1
+}
+
+# 3. Launch metrics_server using cmd /c start (detached, reliable redirect)
+Write-Host ""
+Write-Host "[3/4] Launching metrics_server..."
+# Truncate logs via PowerShell (not cmd — avoids BOM issues)
+Clear-Content -Path $metricsLog -ErrorAction SilentlyContinue
+Clear-Content -Path $metricsErr -ErrorAction SilentlyContinue
+if (-not (Test-Path $metricsLog)) { New-Item -ItemType File -Path $metricsLog -Force | Out-Null }
+if (-not (Test-Path $metricsErr)) { New-Item -ItemType File -Path $metricsErr -Force | Out-Null }
+
+# cmd /c start /B = launch detached without a console window
+$cmdMetrics = "cmd /c start /B `"metrics_server`" /D `"$root`" python metrics_server.py 1>>`"$metricsLog`" 2>>`"$metricsErr`""
+Write-Host "  $cmdMetrics"
+Invoke-Expression $cmdMetrics
+Start-Sleep -Seconds 3
+
+# 4. Launch bot
+Write-Host ""
+Write-Host "[4/4] Launching trade_crypto_bot..."
+$hasToken = & python -c "import keyring; print('yes' if keyring.get_password('RazAgentTrader','TRADE_CRYPTO_BOT_TOKEN') else 'no')" 2>&1
+if ($hasToken.Trim() -ne "yes") {
+    Write-Host "  [SKIP] token missing (hasToken=$hasToken)" -ForegroundColor Yellow
+} else {
+    Clear-Content -Path $botLog -ErrorAction SilentlyContinue
+    Clear-Content -Path $botErr -ErrorAction SilentlyContinue
+    if (-not (Test-Path $botLog)) { New-Item -ItemType File -Path $botLog -Force | Out-Null }
+    if (-not (Test-Path $botErr)) { New-Item -ItemType File -Path $botErr -Force | Out-Null }
+
+    $cmdBot = "cmd /c start /B `"trade_crypto_bot`" /D `"$root`" python crypto_bot\trade_crypto_bot.py 1>>`"$botLog`" 2>>`"$botErr`""
+    Write-Host "  $cmdBot"
+    Invoke-Expression $cmdBot
+}
+Start-Sleep -Seconds 5
+
+# 5. Report
+Write-Host ""
+Write-Host "=== Post-start diagnostics ==="
+$procs = Get-CimInstance Win32_Process -ErrorAction SilentlyContinue |
+         Where-Object { $_.CommandLine -like "*RazAgent_Trader*" -or $_.CommandLine -like "*metrics_server*" -or $_.CommandLine -like "*trade_crypto_bot*" }
+if ($procs) {
+    Write-Host "  Python processes found:"
+    foreach ($p in $procs) {
+        Write-Host "    PID=$($p.ProcessId) - $($p.CommandLine.Substring(0,[Math]::Min(100,$p.CommandLine.Length)))"
     }
+} else {
+    Write-Host "  [!] no Python processes matching RazAgent_Trader" -ForegroundColor Red
+}
+
+$p9100 = Get-NetTCPConnection -LocalPort 9100 -State Listen -ErrorAction SilentlyContinue | Select-Object -First 1
+if ($p9100) {
+    Write-Host "  Port 9100 listening by PID=$($p9100.OwningProcess)" -ForegroundColor Green
+} else {
+    Write-Host "  Port 9100 NOT listening" -ForegroundColor Red
+}
+
+Write-Host ""
+Write-Host "  metrics_server.err.log tail:"
+if ((Test-Path $metricsErr) -and ((Get-Item $metricsErr).Length -gt 0)) {
+    Get-Content $metricsErr -Tail 10 | ForEach-Object { Write-Host "    $_" }
+} else {
+    Write-Host "    (empty or missing)"
+}
+
+Write-Host ""
+Write-Host "  trade_crypto_bot.err.log tail:"
+if ((Test-Path $botErr) -and ((Get-Item $botErr).Length -gt 0)) {
+    Get-Content $botErr -Tail 10 | ForEach-Object { Write-Host "    $_" }
+} else {
+    Write-Host "    (empty or missing)"
 }
