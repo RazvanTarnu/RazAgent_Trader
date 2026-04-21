@@ -207,7 +207,7 @@ def get_strategy_value(key: str, default=None):
     return cfg.get(key, STRATEGY_DEFAULTS.get(key, default))
 
 
-# ── OpenClaw Laptop Deployment (Kimi 2.5 Strategist) ────────────────
+# ── OpenClaw Laptop Deployment (Kimi 2.6 Strategist) ────────────────
 # Role-based config: PC = Executor (GPU), Laptop = Strategist (Cloud LLM).
 # Activated via: set RAZAGENT_ROLE=strategist (or ACTIVATE_OPENCLAW_LAPTOP.bat)
 
@@ -218,7 +218,7 @@ LAPTOP_SOP = {
     "WATCHDOG_STRATEGY_SYNC": {
         "enabled": RAZAGENT_ROLE == "strategist",
         "interval_hours": 12,
-        "description": "Analyze long-context trend data via Kimi 2.5, "
+        "description": "Analyze long-context trend data via Kimi 2.6, "
                        "generate niche directives, push to shared repo",
         "tasks": [
             "scan_micro_niches",       # CoinGecko + Google Trends deep analysis
@@ -236,7 +236,7 @@ LAPTOP_SOP = {
             "audit_affiliate_ctr",     # Flag links with 0 clicks after 7 days
             "suggest_product_swaps",   # Higher-commission alternatives via LLM
             "audit_billing_churn",     # Dunning effectiveness + recovery rate
-            "generate_pricing_memo",   # Kimi 2.5 analyzes competitor pricing
+            "generate_pricing_memo",   # Kimi 2.6 analyzes competitor pricing
         ],
     },
 }
@@ -255,7 +255,7 @@ DEVICE_CAPABILITIES = {
         "local_llm": False,
         "trading_bot": False,    # read-only audit
         "video_pipeline": False,
-        "cloud_llm": True,       # primary (Kimi 2.5)
+        "cloud_llm": True,       # primary (Kimi 2.6)
         "code_review": True,
         "niche_analysis": True,
         "marketing_copy": True,
