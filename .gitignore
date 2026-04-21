@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+env/
+*.egg-info/
+.pytest_cache/
+
+# Logs
+logs/
+*.log
+
+# Data / secrets
+config/laptop.yaml
+.env
+data/*.db
+data/*.db-wal
+data/*.db-shm
+exports/
+*.enc
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+Thumbs.db
+.DS_Store
