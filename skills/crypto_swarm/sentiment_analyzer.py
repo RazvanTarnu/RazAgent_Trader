@@ -27,7 +27,7 @@ logger = logging.getLogger("godclaw.crypto_swarm.sentiment")
 # ──────────────────────────────────────────
 OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
 OPENROUTER_MODEL = os.environ.get("OPENROUTER_MODEL", "qwen/qwen3-30b-a3b")
-OPENROUTER_FALLBACK_MODEL = "moonshotai/kimi-k2.5"
+OPENROUTER_FALLBACK_MODEL = "moonshotai/kimi-k2.6"
 OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://127.0.0.1:11434")
 OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "qwen3:30b-a3b")
 

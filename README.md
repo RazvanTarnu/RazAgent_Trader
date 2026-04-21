@@ -1,13 +1,14 @@
 # RazAgent_Trader
 
 > Crypto trading bot — extracted from the GodClaw / RazAgent Enterprise monorepo.
-> Runs exclusively on the laptop (DESKTOP-BH3MFQ9) with Moonshot Kimi 2.5 as the LLM.
+> Runs exclusively on the laptop (DESKTOP-BH3MFQ9) with Moonshot Kimi 2.6 as the LLM.
 > Isolated from the PC fleet to eliminate Telegram 409 conflicts, GPU contention, and coupling to the video pipeline.
 
 ## Architecture
 
 - **Host**: laptop on LAN `192.168.1.137` (Tailscale optional, added when the laptop leaves the home network).
-- **LLM runtime**: Moonshot Kimi 2.5 via `https://api.moonshot.cn/v1`. API key in keyring scope `RazAgentTrader::MOONSHOT_API_KEY`.
+- **LLM runtime**: OpenRouter → `moonshotai/kimi-k2.6` (Moonshot AI's Kimi K2.6 via OpenRouter aggregator). API key in keyring `AgentCeoR::OPENROUTER_API_KEY`.
+- **Moonshot direct API** (keyring `AgentCeoR::MOONSHOT_API_KEY`): reserved for future use (not currently wired into any module; regenerate at platform.moonshot.ai if needed).
 - **Supervisor bridge**: PC `192.168.1.136` polls read-only metrics from `http://192.168.1.137:9100/metrics/*` via bearer token.
 - **Migration plan**: `data/missions/trader_migration.md` (in the parent GodClaw repo on PC).
 

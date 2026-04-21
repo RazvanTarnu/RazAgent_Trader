@@ -300,14 +300,14 @@ async def generate_predictions(
                     logger.warning("[PREDICT] Ollama failed for %s (%s) — cloud fallback", coin_id, _oll_err)
 
             if _use_cloud or not raw.strip():
-                # Path B: Cloud (Kimi K2.5 via OpenRouter) — guaranteed response
+                # Path B: Cloud (Kimi K2.6 via OpenRouter) — guaranteed response
                 try:
                     import os as _os
                     from shared.keyring_loader import get_credential
                     api_key = get_credential("OPENROUTER_API_KEY")
                     if api_key:
                         cloud_url = _os.environ.get("OLLAMA_CLOUD_URL", "https://openrouter.ai/api/v1")
-                        # V1.8.4: Gemini Flash as prediction cloud — Kimi K2.5 returns None content
+                        # V1.8.4: Gemini Flash as prediction cloud — Kimi K2.6 returns None content
                         cloud_model = _os.environ.get("PREDICTION_CLOUD_MODEL", "google/gemini-2.0-flash-001")
                         cloud_resp = await client.post(
                             f"{cloud_url}/chat/completions",

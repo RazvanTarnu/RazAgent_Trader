@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "razagent-trader"
 version = "0.1.0"
-description = "Crypto trading bot extracted from GodClaw, runs on laptop with Moonshot Kimi 2.5"
+description = "Crypto trading bot extracted from GodClaw, runs on laptop with Moonshot Kimi 2.6"
 readme = "README.md"
 requires-python = ">=3.12"
 authors = [{ name = "Razvan Tarnu", email = "razvan_tarnu@yahoo.com" }]
