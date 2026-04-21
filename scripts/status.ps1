@@ -52,7 +52,7 @@ if ($p) {
 # 4. Logs
 Write-Host ""
 Write-Host "[Recent log entries]"
-foreach ($log in @("watchdog.log","trade_crypto_bot.log","trade_crypto_bot.err.log","metrics_server.log","metrics_server.err.log")) {
+foreach ($log in @("watchdog.log","trade_crypto_bot.log","trade_crypto_bot_stderr.log","trade_crypto_bot_stdout.log","metrics_server.log","metrics_server.err.log")) {
     $lp = Join-Path $root "logs\$log"
     if (Test-Path $lp) {
         $size = (Get-Item $lp).Length

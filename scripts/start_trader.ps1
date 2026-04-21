@@ -11,8 +11,13 @@ New-Item -ItemType Directory -Path $logDir -Force | Out-Null
 
 $metricsLog = Join-Path $logDir "metrics_server.log"
 $metricsErr = Join-Path $logDir "metrics_server.err.log"
-$botLog     = Join-Path $logDir "trade_crypto_bot.log"
-$botErr     = Join-Path $logDir "trade_crypto_bot.err.log"
+# NOTE: trade_crypto_bot.py already has an internal logging.FileHandler that writes
+# to logs/trade_crypto_bot.log. If cmd redirects stdout to that SAME file,
+# Windows denies the second append-open -> PermissionError, bot crashes silently.
+# So cmd stdout+stderr go to *_stdout.log / *_stderr.log; the bot's own logger
+# keeps owning trade_crypto_bot.log for structured logs.
+$botLog     = Join-Path $logDir "trade_crypto_bot_stdout.log"
+$botErr     = Join-Path $logDir "trade_crypto_bot_stderr.log"
 
 Write-Host "=== start_trader.ps1 ===" -ForegroundColor Cyan
 Write-Host "  root: $root"
@@ -107,7 +112,7 @@ if ((Test-Path $metricsErr) -and ((Get-Item $metricsErr).Length -gt 0)) {
 }
 
 Write-Host ""
-Write-Host "  trade_crypto_bot.err.log tail:"
+Write-Host "  trade_crypto_bot_stderr.log tail:"
 if ((Test-Path $botErr) -and ((Get-Item $botErr).Length -gt 0)) {
     Get-Content $botErr -Tail 10 | ForEach-Object { Write-Host "    $_" }
 } else {
