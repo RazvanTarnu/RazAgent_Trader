@@ -51,7 +51,10 @@ if (-not (Test-Path $metricsLog)) { New-Item -ItemType File -Path $metricsLog -F
 if (-not (Test-Path $metricsErr)) { New-Item -ItemType File -Path $metricsErr -Force | Out-Null }
 
 # cmd /c start /B = launch detached without a console window
-$cmdMetrics = "cmd /c start /B `"metrics_server`" /D `"$root`" python metrics_server.py 1>>`"$metricsLog`" 2>>`"$metricsErr`""
+# NOTE: 'start "" /B ...' — the empty quoted string IS the window title.
+# Without it, 'start /B "metrics_server"' makes Windows try to launch a program
+# called metrics_server (error: Windows cannot find 'metrics_server').
+$cmdMetrics = "cmd /c start `"`" /B /D `"$root`" python metrics_server.py 1>>`"$metricsLog`" 2>>`"$metricsErr`""
 Write-Host "  $cmdMetrics"
 Invoke-Expression $cmdMetrics
 Start-Sleep -Seconds 3
@@ -68,7 +71,7 @@ if ($hasToken.Trim() -ne "yes") {
     if (-not (Test-Path $botLog)) { New-Item -ItemType File -Path $botLog -Force | Out-Null }
     if (-not (Test-Path $botErr)) { New-Item -ItemType File -Path $botErr -Force | Out-Null }
 
-    $cmdBot = "cmd /c start /B `"trade_crypto_bot`" /D `"$root`" python crypto_bot\trade_crypto_bot.py 1>>`"$botLog`" 2>>`"$botErr`""
+    $cmdBot = "cmd /c start `"`" /B /D `"$root`" python crypto_bot\trade_crypto_bot.py 1>>`"$botLog`" 2>>`"$botErr`""
     Write-Host "  $cmdBot"
     Invoke-Expression $cmdBot
 }
