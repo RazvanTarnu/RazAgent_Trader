@@ -31,6 +31,13 @@ import time
 from datetime import datetime, timedelta
 from pathlib import Path
 
+# --- SELF-BOOTSTRAP sys.path (works even without PYTHONPATH set) ---
+# This file is at <ROOT>/crypto_bot/trade_crypto_bot.py; shared/ lives at <ROOT>/shared/.
+_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if _ROOT not in sys.path:
+    sys.path.insert(0, _ROOT)
+# -------------------------------------------------------------------
+
 from shared.setup_paths import activate; activate()
 
 import httpx
