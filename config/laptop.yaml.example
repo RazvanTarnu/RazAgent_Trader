@@ -1,0 +1,22 @@
+# Host-specific configuration template for laptop deployment.
+# Copy to config/laptop.yaml (gitignored) and customize.
+# NEVER commit real secrets to this file.
+
+environment: laptop
+host_id: laptop
+
+metrics:
+  host: 0.0.0.0
+  port: 9100
+  allowed_ips:
+    - 127.0.0.1
+    - 192.168.1.0/24
+    - 100.64.0.0/10  # Tailscale CGNAT range
+
+safety:
+  paper_mode: true
+  auto_live: false
+
+llm:
+  provider: openrouter
+  model: moonshotai/kimi-k2.6

@@ -1,0 +1,40 @@
+# RazAgent_Trader platform default configuration
+# NO SECRETS in this file — credentials come from keyring only.
+
+environment: development
+host_id: laptop
+
+llm:
+  provider: openrouter
+  model: moonshotai/kimi-k2.6
+  base_url: https://openrouter.ai/api/v1
+  timeout_seconds: 60.0
+  max_retries: 2
+  moonshot_enabled: false
+  moonshot_model: moonshot-v1-128k
+  moonshot_base_url: https://api.moonshot.cn/v1
+
+exchanges:
+  enabled:
+    - binance
+    - kucoin
+  default_exchange: binance
+  request_timeout_seconds: 15.0
+  max_retries: 3
+
+metrics:
+  host: 0.0.0.0
+  port: 9100
+  bearer_token_key: TAILSCALE_METRIC_TOKEN
+  allowed_ips:
+    - 127.0.0.1
+    - 192.168.1.0/24
+
+safety:
+  paper_mode: true
+  max_trade_usd: 7.0
+  max_daily_loss_usd: 20.0
+  auto_live: false
+
+data_dir: data
+logs_dir: logs
