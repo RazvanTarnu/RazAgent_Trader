@@ -12,7 +12,7 @@ authors = [{ name = "Razvan Tarnu", email = "razvan_tarnu@yahoo.com" }]
 license = { text = "Proprietary" }
 
 [tool.setuptools]
-packages = ["crypto_bot", "shared", "skills"]
+packages = ["crypto_bot", "shared", "shared.platform", "shared.providers", "skills"]
 
 [tool.setuptools.package-data]
 "*" = ["*.json", "*.yaml", "*.md"]
