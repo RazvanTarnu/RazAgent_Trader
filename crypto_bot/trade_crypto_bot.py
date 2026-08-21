@@ -183,7 +183,7 @@ async def cmd_portfolio(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
     await update.message.reply_text("💼 Citesc portofoliul...", parse_mode=None)
     try:
-        from backend.razagent_server.skills.crypto_swarm import register_tools
+        from skills.crypto_swarm import register_tools
         tools = register_tools()
         result = await asyncio.wait_for(tools["crypto_portfolio"](), timeout=30.0)
         text_out = result.get("output", result.get("error", str(result)))

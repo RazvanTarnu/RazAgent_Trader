@@ -6,7 +6,7 @@ lot sizes) from exchange public endpoints. Prevents order rejections due
 to MIN_NOTIONAL or LOT_SIZE violations.
 
 Usage:
-    from trading_intelligence.exchange_rules import get_symbol_rules, fetch_exchange_limits
+    from legacy.trading_intelligence_v1.exchange_rules import get_symbol_rules, fetch_exchange_limits
     rules = await get_symbol_rules("BTCUSDT")
     # rules = {"min_notional": 5.0, "min_qty": 0.00001, "step_size": 0.00001, ...}
 """

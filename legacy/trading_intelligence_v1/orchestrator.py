@@ -7,7 +7,7 @@
     -> Format Report -> Send via Telegram
 
 Usage:
-    from trading_intelligence import TradingIntelligenceOrchestrator
+    from legacy.trading_intelligence_v1 import TradingIntelligenceOrchestrator
 
     orchestrator = TradingIntelligenceOrchestrator(telegram_send_func=my_send)
     await orchestrator.start()

@@ -12,7 +12,25 @@ authors = [{ name = "Razvan Tarnu", email = "razvan_tarnu@yahoo.com" }]
 license = { text = "Proprietary" }
 
 [tool.setuptools]
-packages = ["crypto_bot", "shared", "shared.platform", "shared.providers", "skills"]
+packages = [
+    "crypto_bot",
+    "shared",
+    "shared.platform",
+    "shared.providers",
+    "skills",
+    "legacy",
+    "legacy.trading_intelligence_v1",
+    "legacy.trading_intelligence_v1.exchanges",
+    "trading_intelligence",
+    "trading_intelligence.backtest",
+    "trading_intelligence.data",
+    "trading_intelligence.data.providers",
+    "trading_intelligence.features",
+    "trading_intelligence.pipeline",
+    "trading_intelligence.regime",
+    "trading_intelligence.signals",
+    "trading_intelligence.swarm",
+]
 
 [tool.setuptools.package-data]
 "*" = ["*.json", "*.yaml", "*.md"]

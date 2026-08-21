@@ -53,8 +53,8 @@ FINANCIAL_ENDPOINTS = (
 HTTP_MUTATORS = frozenset({"post", "put", "delete", "patch"})
 SKIP_PARTS = {".git", ".venv", "venv", "__pycache__", "tests"}
 QUARANTINED_LEGACY_EXECUTORS = frozenset({
-    Path("skills/trading_intelligence/exchanges/binance_executor.py"),
-    Path("skills/trading_intelligence/exchanges/kucoin_executor.py"),
+    Path("legacy/trading_intelligence_v1/exchanges/binance_executor.py"),
+    Path("legacy/trading_intelligence_v1/exchanges/kucoin_executor.py"),
 })
 LIVE_BROKER_NAMES = frozenset({"livebroker", "live_broker"})
 

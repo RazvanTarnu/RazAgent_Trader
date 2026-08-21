@@ -15,7 +15,7 @@ Output: ~200 tokens of structured JSON containing:
   - last_14_days (array of close prices for recent momentum)
 
 Usage:
-    from trading_intelligence.price_action_analyzer import get_macro_summary
+    from legacy.trading_intelligence_v1.price_action_analyzer import get_macro_summary
     summary = get_macro_summary("BTCUSDT")
 """
 import logging

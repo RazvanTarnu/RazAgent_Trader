@@ -1,0 +1,51 @@
+"""Regression fixture reproducing C23: a quarantined legacy executor with
+the ExecutionForbidden guard removed.
+
+This file is stored as .txt so it is not importable. The F1.0 AST checker
+must flag place_market_order: a signed HMAC client posts to /api/v3/order
+with no raise_execution_forbidden / ExecutionForbidden before the network
+call. File-level grep is not enough — the dead guard on cancel_order must
+not hide the unguarded order path.
+"""
+import hashlib
+import hmac
+import time
+
+import httpx
+
+_BASE = "https://api.binance.com"
+
+
+class UnguardedBinanceExecutor:
+    def _sign(self, params: dict) -> str:
+        qs = "&".join(f"{k}={v}" for k, v in sorted(params.items()))
+        return hmac.new(b"secret", qs.encode(), hashlib.sha256).hexdigest()
+
+    def _headers(self) -> dict:
+        return {"X-MBX-APIKEY": "key"}
+
+    async def cancel_order(self, symbol: str, order_id: str) -> None:
+        # Guard on a *different* method. grep-on-file would pass; AST-on-body
+        # of place_market_order must still fail.
+        from shared.execution import raise_execution_forbidden
+        raise_execution_forbidden(
+            "this guard is on cancel_order only",
+            target="UnguardedBinanceExecutor.cancel_order",
+        )
+
+    async def place_market_order(self, symbol: str, side: str, amount_usd: float):
+        params = {
+            "symbol": symbol,
+            "side": side.upper(),
+            "type": "MARKET",
+            "quantity": amount_usd,
+            "timestamp": int(time.time() * 1000),
+        }
+        params["signature"] = self._sign(params)
+        async with httpx.AsyncClient(timeout=10) as client:
+            order_url = f"{_BASE}/api/v3/order"
+            return await client.post(
+                order_url,
+                headers=self._headers(),
+                params=params,
+            )
