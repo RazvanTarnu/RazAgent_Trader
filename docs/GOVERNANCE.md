@@ -127,10 +127,28 @@ O faza este „gata” **numai** dacă toate sunt adevărate:
 |---|---|
 | Schema + Roadmap | ✅ scrise (`docs/SCHEMA_AND_ROADMAP.md`) |
 | Guvernanță | ✅ acest document |
+| Monitorizare orară a repo-ului | ✅ activă (vezi §8) |
 | **Faza 0 — Containment** | ⏳ **următorul pas al lui Codex** |
 | Faza 1 — Merge quant engine (PR #2) | ⛔ blocată de F0 |
 | Fazele 2–8 | ⛔ blocate |
 | Faza 9 — capital real | 🔒 blocată permanent până la audit |
+
+## 8. Monitorizare automată
+
+Perplexity verifică repo-ul **orar** (task recurent activ). La fiecare verificare:
+
+1. Determină ancora = ultimul commit pe `docs/SCHEMA_AND_ROADMAP.md`.
+2. Caută avans după ancoră: commit-uri de cod pe orice branch, branch-uri `codex/*` noi, PR-uri noi sau actualizate, rapoarte `docs/PHASE_*_REPORT.md`.
+3. Fără avans ⇒ nicio acțiune, nicio notificare.
+4. Cu avans ⇒ citește codul nou, îl verifică contra invariantelor I1–I8 și regulilor S1–S9, rulează `pytest tests/` și scanarea `create_order`.
+5. Extinde `docs/SCHEMA_AND_ROADMAP.md` cu detalierea fină a fazei următoare, actualizează §7 din acest fișier, și scrie **`docs/WORK_FRONT.md`** — frontul de lucru curent pentru Codex.
+6. Notifică proprietarul repo-ului cu rezumatul și eventualele blocante.
+
+**`docs/WORK_FRONT.md` este fișierul pe care Codex îl citește primul.** Conține: ce s-a livrat, constatări noi (numerotate în continuarea C1–C14), încălcări de invariant marcate `🔴 BLOCANT`, și lista numerotată de task-uri în ordine cu branch-ul recomandat.
+
+Monitorizarea nu comite niciodată cod de producție și nu face merge la PR-uri. Scrie exclusiv în `docs/`.
+
+---
 
 Constatările critice care motivează Faza 0 (C1–C14) sunt în `docs/SCHEMA_AND_ROADMAP.md` §1.4.
 Cea mai gravă: `skills/crypto_swarm/trade_executioner.py` apelează direct `create_order` pe un client de bursă real, fără verificare de paper mode, fără drawdown guard, fără approval gate.
