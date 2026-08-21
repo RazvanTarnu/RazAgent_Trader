@@ -4,10 +4,10 @@
 **Data:** 2026-08-21
 **Repo:** `RazvanTarnu/RazAgent_Trader` (privat)
 **Colaborator implementare:** Codex
-**Status repo la ultima actualizare:** `main` @ `f3da9ab` (PR #3, F0 merged), 44 teste platformă + 7 teste securitate verzi.
+**Status repo la ultima actualizare:** `main` @ `1366408`; PR #4 (F0-R) aprobat, 82 teste platformă + 45 teste securitate verzi.
 
-> **🔴 STARE CURENTĂ (2026-08-21): F0 a fost RESPINS la review post-merge. Frontul activ este F0-R — Containment Remediation. F1 este BLOCAT.**
-> Verdict și dovezi: [`docs/F0_REVIEW.md`](./F0_REVIEW.md) · Task-uri concrete: [`docs/WORK_FRONT.md`](./WORK_FRONT.md)
+> **🟢 STARE CURENTĂ (2026-08-21, 09:15): F0-R APROBAT (PR #4). F1 DEBLOCAT — front activ, cu F1.0 (C23) obligatoriu primul.**
+> Verdicte: [`docs/F0_REVIEW.md`](./F0_REVIEW.md) (F0 respins) · [`docs/F0R_REVIEW.md`](./F0R_REVIEW.md) (F0-R aprobat) · Task-uri concrete: [`docs/WORK_FRONT.md`](./WORK_FRONT.md)
 
 > **REGULI NENEGOCIABILE ALE ACESTUI DOCUMENT**
 > 1. **PAPER TRADING ONLY** până la un audit ulterior explicit. Nicio execuție reală de ordine. Nici măcar accidental, nici măcar „doar de test”.
@@ -135,6 +135,16 @@ Auditul post-merge al PR #3 a descoperit că inventarul inițial (C1–C14) a ra
 | **C20** | 🟡 | Refuzurile `ExecutionForbidden` nu emit `AuditEvent`. | toate punctele de cuarantină |
 | **C21** | 🟡 | `crypto_bot/trade_crypto_bot.py:186` importa `backend.razagent_server.*`, prefix inexistent — maschează reachability-ul real. | `crypto_bot/trade_crypto_bot.py:186` |
 | **C22** | 🟡 | `_get_keys()` citește `os.environ` direct, ocolind `shared/platform/secrets.py`. | `skills/crypto_swarm/dust_sweeper.py:16-21` |
+
+**Stare (după F0-R):** C15, C16, C17, C18, C20, C22 — ✅ închise și verificate comportamental. C19 → F4. C21 → F1 (P2-7).
+
+### 1.6 Constatare din review-ul F0-R (2026-08-21)
+
+| # | Sev. | Constatare | Locație |
+|---|---|---|---|
+| **C23** | 🟠 | Scanerul de securitate exclude doi executori legacy din verificări, dar **nimic nu asertă că modulele rămân cuarantinate**. Dovedit empiric: înlăturarea guard-urilor `raise_execution_forbidden` din `binance_executor.py` restaurează o cale live semnată HMAC către `POST /api/v3/order` și **toate 45 de teste trec verzi**. | `tests/security/live_execution_scan.py:55` |
+
+**Regulă adoptată:** orice excludere dintr-un scaner de securitate cere o asertiune care dovedește de ce excluderea e sigură. O listă de excluderi fără test compensatoriu este o zonă oarbă cu documentație. Remediere: F1.0, primul commit al F1.
 
 **Lecție încorporată în schema:** un test de securitate se validează prin faptul că **devine roșu când reintroduci defectul**, nu prin faptul că e verde. Fiecare fază viitoare cu componență de securitate cere un fixture de regresie.
 
@@ -344,7 +354,11 @@ Scop: încheie ce F0 nu a încheiat și face containment-ul **demonstrabil**, nu
 
 **DoD F0-R:** vezi [`docs/WORK_FRONT.md`](./WORK_FRONT.md). Condiția dură: scanerul de securitate semnalează fixture-ul de regresie și raportează zero violări pe repo.
 
-### FAZA 1 — MERGE & CONSOLIDARE QUANT ENGINE · P0 · [dep: **F0-R**] · 🔒 BLOCATĂ
+**STATUS F0-R: 🟢 APROBAT (2026-08-21, PR #4 @ `6449556`).** Toate cele șase task-uri livrate. Verificat independent: 82 + 45 teste verzi; kill-switch blochează efectiv `place_order`; `crypto_dust_sweep` ridică `ExecutionForbidden` și e dezînregistrat din `register_tools()`; scanerul devine roșu în 3 teste la reintroducerea defectului B1, în două scenarii independente. Un report obligatoriu: **C23 → F1.0**. Vezi [`docs/F0R_REVIEW.md`](./F0R_REVIEW.md).
+
+### FAZA 1 — MERGE & CONSOLIDARE QUANT ENGINE · P0 · [dep: F0-R] · ⏳ **FRONT ACTIV**
+
+**F1.0 — obligatoriu înaintea oricărei alte munci F1:** închide C23 prin `tests/security/test_legacy_quarantine.py` — asertiune AST pe ordinea instrucțiunilor că fiecare metodă de ordin din executorii excluși ridică `ExecutionForbidden` înaintea oricărui apel de rețea, test comportamental, și fixture de regresie. Detalii: [`docs/WORK_FRONT.md`](./WORK_FRONT.md).
 
 Re-planificată după auditul PR #2. Granița research ↔ execuție pe branch-ul `cursor/quant-engine-b60c` a fost verificată și este **curată**: niciun import de `ccxt`, `keyring`, `shared.providers.exchange`, `shared.execution`, approval gate sau ordine în `trading_intelligence/*`; singurul acces la rețea este `httpx` către API-ul public CoinGecko.
 
@@ -457,8 +471,8 @@ Trecerea la capital real este **out of scope**. Preconditii minime, documentate 
 
 ```
 F0 (containment) — 🔴 RESPINS la review
- └─> F0-R (containment remediation) — ⏳ FRONT ACTIV
-      └─> F1 (merge quant engine, 10 condiții PR #2)
+ └─> F0-R (containment remediation) — 🟢 APROBAT (PR #4)
+      └─> F1 (F1.0 = C23, apoi 10 condiții PR #2) — ⏳ FRONT ACTIV
            ├─> F2 (data plane) ──> F3 (backtest realist + validare)
            │                        ├─> F4 (paper broker + gateway) ──> F7 (observabilitate)
            │                        │                                └─> F5 (risk engine)

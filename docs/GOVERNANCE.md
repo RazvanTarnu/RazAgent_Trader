@@ -118,13 +118,14 @@ O faza este „gata” **numai** dacă toate sunt adevărate:
 - [ ] `docs/PHASE_N_REPORT.md` scris, inclusiv ce **nu** s-a făcut
 - [ ] Review Perplexity: invariante I1–I8 și regulile S1–S9 intacte
 - [ ] Pentru faze cu componență de securitate: **fixture de regresie** care face scanerul roșu la reintroducerea defectului
+- [ ] Fiecare **excludere** dintr-un scaner de securitate are o asertiune care dovedește că excluderea rămâne sigură
 - [ ] Roadmap actualizat
 
 ---
 
 ## 7. Starea curentă
 
-**Actualizat:** 2026-08-21, după review-ul post-merge al F0.
+**Actualizat:** 2026-08-21 09:15, după review-ul F0-R.
 
 | Element | Stare |
 |---|---|
@@ -132,9 +133,9 @@ O faza este „gata” **numai** dacă toate sunt adevărate:
 | Guvernanță | ✅ acest document |
 | Monitorizare orară a repo-ului | ✅ activă (vezi §8) |
 | Front de lucru curent | ✅ `docs/WORK_FRONT.md` |
-| **Faza 0 — Containment** | 🔴 **RESPINSĂ la review** — PR #3 merged, dar containment incomplet (`docs/F0_REVIEW.md`) |
-| **Faza 0-R — Containment Remediation** | ⏳ **FRONT ACTIV — următorul pas al lui Codex** |
-| Faza 1 — Merge quant engine (PR #2) | ⛔ blocată de F0-R · 10 condiții de merge documentate (P2-1…P2-10) |
+| Faza 0 — Containment | 🔴 Respinsă la review — PR #3 merged, containment incomplet (`docs/F0_REVIEW.md`) |
+| Faza 0-R — Containment Remediation | 🟢 **APROBATĂ** — PR #4, de merged de proprietar (`docs/F0R_REVIEW.md`) |
+| **Faza 1 — Merge quant engine (PR #2)** | ⏳ **FRONT ACTIV** — F1.0 (C23) obligatoriu primul, apoi P2-1…P2-10 |
 | Fazele 2–8 | ⛔ blocate |
 | Faza 9 — capital real | 🔒 blocată permanent până la audit |
 
@@ -149,6 +150,18 @@ O faza este „gata” **numai** dacă toate sunt adevărate:
 **Regulă nouă, adoptată din acest eșec — se adaugă la §6 Definition of Done:**
 
 > Un test de securitate se validează prin faptul că **devine roșu când reintroduci defectul**, nu prin faptul că e verde. Orice fază cu componență de securitate livrează un **fixture de regresie** care reproduce defectul și pe care scanerul trebuie să îl semnaleze.
+
+### 7.2 Rezultatul review-ului F0-R (2026-08-21)
+
+**Verdict: APROBAT.** Toate cele șase task-uri livrate. Verificat independent, comportamental și nu doar pe cod citit: 82 teste + 45 teste de securitate verzi; kill-switch ARMED face `place_order` să returneze `success=False`; `crypto_dust_sweep` ridică `ExecutionForbidden` și nu mai e înregistrat ca tool; scanerul devine roșu în 3 teste la reintroducerea defectului B1, testată în două scenarii independente.
+
+C15, C16, C17, C18, C20, C22 — închise. F1 deblocat.
+
+**Un report obligatoriu — C23:** scanerul exclude doi executori legacy din verificări, dar nimic nu asertă că modulele rămân cuarantinate. Înlăturarea guard-urilor din `binance_executor.py` restaurează o cale live semnată HMAC și toate testele trec verzi. Se remediază ca F1.0, primul commit al F1.
+
+**A doua regulă nouă, adoptată din C23 — se adaugă la §6 Definition of Done:**
+
+> Orice **excludere** dintr-un scaner de securitate cere o asertiune care dovedește de ce excluderea e sigură. O listă de excluderi fără test compensatoriu este o zonă oarbă cu documentație.
 
 ## 8. Monitorizare automată
 
