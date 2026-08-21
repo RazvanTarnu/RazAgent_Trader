@@ -24,7 +24,8 @@ async def run_daily_review() -> dict:
     Returns dict with analysis results.
     """
     from shared.trade_journal import get_daily_stats, get_lessons, get_pattern_analysis
-    from shared.binance_live_config import PAPER_MODE
+    from shared.platform.config import load_platform_config
+    PAPER_MODE = load_platform_config().safety.paper_mode
 
     # Gather data
     stats_7d = get_daily_stats(days=7)
@@ -120,7 +121,8 @@ async def _notify_telegram(stats: dict, analysis: str):
         if not admin_id or not token:
             return
 
-        from shared.binance_live_config import PAPER_MODE
+        from shared.platform.config import load_platform_config
+        PAPER_MODE = load_platform_config().safety.paper_mode
         mode = "PAPER" if PAPER_MODE else "LIVE"
 
         # Extract first 3 insights from analysis

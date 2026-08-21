@@ -61,8 +61,9 @@ async def _send_trade_audit(suggestion: dict, exec_result: dict) -> None:
 
         # Determine mode (paper vs live)
         try:
-            from crypto_bot.config import PAPER_MODE
-            mode = "\U0001f4c4 PAPER" if PAPER_MODE else "\u26a1 LIVE"
+            from shared.platform.config import load_platform_config
+            paper_mode = load_platform_config().safety.paper_mode
+            mode = "\U0001f4c4 PAPER" if paper_mode else "\u26a1 LIVE"
         except Exception:
             mode = "\U0001f4c4 PAPER"
 

@@ -27,10 +27,9 @@ def _init_db():
     conn.commit()
     conn.close()
 
-_init_db()
-
 async def prepare_trade(exchange_name: str, symbol: str, side: str, amount: float, **kwargs) -> dict:
     """Prepare a trade order (does NOT execute — requires manual approval)."""
+    _init_db()
     from .exchange_connector import get_exchange
     from .risk_manager import validate_trade
 
@@ -93,78 +92,14 @@ async def prepare_trade(exchange_name: str, symbol: str, side: str, amount: floa
         return {"error": f"Prepare failed: {type(e).__name__}: {str(e)[:200]}"}
 
 async def execute_trade(trade_id: int, **kwargs) -> dict:
-    """Execute an approved trade by ID. Requires confirmed='true' for safety."""
-    from .exchange_connector import get_exchange
+    """Reject every execution attempt in the paper-only build."""
+    from shared.execution import ExecutionForbidden
 
-    # Human-in-the-loop confirmation gate
-    confirmed = str(kwargs.get("confirmed", "")).lower().strip()
-    if confirmed != "true":
-        return {
-            "output": (
-                f"⚠️ <b>Confirmation Required</b>\n\n"
-                f"To execute trade #{trade_id}, reply with:\n"
-                f"<code>/crypto execute {trade_id} confirmed=true</code>"
-            ),
-            "requires_confirmation": True,
-        }
-
-    with sqlite3.connect(str(DB_PATH)) as conn:
-        # BEGIN EXCLUSIVE to prevent race conditions (double-execution)
-        conn.execute("BEGIN EXCLUSIVE")
-        row = conn.execute("SELECT * FROM trade_history WHERE id=? AND status='pending'", (trade_id,)).fetchone()
-        if not row:
-            conn.rollback()
-            return {"error": f"Trade #{trade_id} not found or already executed."}
-
-        exchange_name, symbol, side, amount, prepared_price = row[1], row[2], row[3], row[4], row[5]
-        ex = get_exchange(exchange_name)
-        if not ex:
-            conn.rollback()
-            return {"error": f"Exchange {exchange_name} not connected."}
-
-        try:
-            # Price re-validation: fetch current price and compare with prepared price
-            ticker = await ex.fetch_ticker(symbol)
-            current_price = ticker["last"]
-            if prepared_price and prepared_price > 0:
-                deviation = abs(current_price - prepared_price) / prepared_price
-                if deviation > 0.05:
-                    conn.rollback()
-                    return {
-                        "error": (
-                            f"Price deviation too high ({deviation:.1%}). "
-                            f"Prepared: ${prepared_price:.4f}, Current: ${current_price:.4f}. "
-                            f"Re-run prepare_trade for a fresh quote."
-                        ),
-                    }
-
-            order = await ex.create_order(symbol, "market", side, amount)
-            order_id = order.get("id", "unknown")
-            fill_price = order.get("average") or order.get("price", 0)
-
-            conn.execute(
-                "UPDATE trade_history SET status='executed', order_id=?, price=?, executed_at=datetime('now') WHERE id=?",
-                (str(order_id), fill_price, trade_id),
-            )
-            conn.commit()
-
-            return {
-                "output": (
-                    f"✅ <b>Trade #{trade_id} EXECUTED</b>\n\n"
-                    f"Order ID: {order_id}\n"
-                    f"{side.upper()} {amount} {symbol}\n"
-                    f"Fill Price: ${fill_price:.4f}"
-                ),
-                "order_id": order_id,
-            }
-        except Exception as e:
-            conn.execute("UPDATE trade_history SET status='failed' WHERE id=?", (trade_id,))
-            conn.commit()
-            logger.error(f"[Executor] Execute failed: {e}", exc_info=True)
-            return {"error": f"Execution failed: {type(e).__name__}: {str(e)[:200]}"}
+    raise ExecutionForbidden("live execution not implemented; paper-only build")
 
 async def trade_history(limit: int = 10, **kwargs) -> dict:
     """Get recent trade history."""
+    _init_db()
     limit = max(1, min(int(limit), 100))  # Bound: 1-100
 
     with sqlite3.connect(str(DB_PATH)) as conn:

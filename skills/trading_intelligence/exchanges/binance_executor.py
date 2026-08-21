@@ -142,7 +142,10 @@ class BinanceExecutor(BaseExchangeExecutor):
     async def place_market_order(
         self, symbol: str, side: str, amount_usd: float,
     ) -> OrderResult:
-        self._validate_trade(amount_usd)
+        from shared.execution import ExecutionForbidden
+        raise ExecutionForbidden("legacy Binance executor is quarantined; paper-only build")
+
+        self._validate_trade(amount_usd)  # pragma: no cover
 
         try:
             price_info = await self.get_price(symbol)
