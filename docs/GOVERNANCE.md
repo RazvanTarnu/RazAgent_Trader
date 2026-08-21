@@ -125,7 +125,7 @@ O faza este „gata” **numai** dacă toate sunt adevărate:
 
 ## 7. Starea curentă
 
-**Actualizat:** 2026-08-21 09:15, după review-ul F0-R.
+**Actualizat:** 2026-08-21 09:18, după re-review-ul independent F0-R.
 
 | Element | Stare |
 |---|---|
@@ -134,7 +134,7 @@ O faza este „gata” **numai** dacă toate sunt adevărate:
 | Monitorizare orară a repo-ului | ✅ activă (vezi §8) |
 | Front de lucru curent | ✅ `docs/WORK_FRONT.md` |
 | Faza 0 — Containment | 🔴 Respinsă la review — PR #3 merged, containment incomplet (`docs/F0_REVIEW.md`) |
-| Faza 0-R — Containment Remediation | 🟢 **APROBATĂ** — PR #4, de merged de proprietar (`docs/F0R_REVIEW.md`) |
+| Faza 0-R — Containment Remediation | 🟢 **APROBATĂ prin review** — PR #4 încă OPEN, merge doar de proprietar (`docs/F0R_REVIEW.md`) |
 | **Faza 1 — Merge quant engine (PR #2)** | ⏳ **FRONT ACTIV** — F1.0 (C23) obligatoriu primul, apoi P2-1…P2-10 |
 | Fazele 2–8 | ⛔ blocate |
 | Faza 9 — capital real | 🔒 blocată permanent până la audit |
@@ -163,6 +163,12 @@ C15, C16, C17, C18, C20, C22 — închise. F1 deblocat.
 
 > Orice **excludere** dintr-un scaner de securitate cere o asertiune care dovedește de ce excluderea e sigură. O listă de excluderi fără test compensatoriu este o zonă oarbă cu documentație.
 
+### 7.3 Re-review independent (2026-08-21, 09:18 EEST)
+
+Pe `codex/phase0r-containment-remediation` la `6449556`, re-review-ul a rulat `pip install -q -r requirements.txt`, `python -m pytest tests/ -q` (82 passed) și `python -m pytest tests/security -q` (45 passed). Guard-urile au fost executate efectiv pentru dust sweep, execute legacy, kill-switch pe Binance și KuCoin, deny-list-uri și registry. La reintroducerea versiunii pre-remediere a lui `dust_sweeper.py`, suita de securitate a devenit roșie cu 5 eșecuri; worktree-ul a fost restaurat cu `git checkout -- .`.
+
+C23 rămâne deschisă, nu este o constatare nouă: scannerul exclude executorii legacy fără asertiune compensatorie. F1.0 este în continuare obligatoriu primul commit al fazei F1. PR #4 este OPEN și merge-ul aparține proprietarului repo-ului; Perplexity nu face merge.
+
 ## 8. Monitorizare automată
 
 Perplexity verifică repo-ul **orar** (task recurent activ). La fiecare verificare:
@@ -174,7 +180,7 @@ Perplexity verifică repo-ul **orar** (task recurent activ). La fiecare verifica
 5. Extinde `docs/SCHEMA_AND_ROADMAP.md` cu detalierea fină a fazei următoare, actualizează §7 din acest fișier, și scrie **`docs/WORK_FRONT.md`** — frontul de lucru curent pentru Codex.
 6. Notifică proprietarul repo-ului cu rezumatul și eventualele blocante.
 
-**`docs/WORK_FRONT.md` este fișierul pe care Codex îl citește primul.** Conține: ce s-a livrat, constatări noi (numerotate în continuarea C1–C14), încălcări de invariant marcate `🔴 BLOCANT`, și lista numerotată de task-uri în ordine cu branch-ul recomandat.
+**`docs/WORK_FRONT.md` este fișierul pe care Codex îl citește primul.** Conține: ce s-a livrat, constatări noi (numerotate în continuarea C1–C23), încălcări de invariant marcate `🔴 BLOCANT`, și lista numerotată de task-uri în ordine cu branch-ul recomandat.
 
 Monitorizarea nu comite niciodată cod de producție și nu face merge la PR-uri. Scrie exclusiv în `docs/`.
 

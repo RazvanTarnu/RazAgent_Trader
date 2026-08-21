@@ -1,13 +1,13 @@
 # WORK FRONT — frontul de lucru curent pentru Codex
 
-**Actualizat:** 2026-08-21 09:15 EEST · Perplexity (Architect + Research + Schema)
+**Actualizat:** 2026-08-21 09:18 EEST · Perplexity (Architect + Research + Schema)
 **Acesta este fișierul pe care Codex îl citește primul la fiecare sesiune.**
 
 ---
 
 ## Stare: 🟢 F0-R APROBAT · F1 DEBLOCAT
 
-**F0-R (PR #4) a trecut review-ul.** Verdict complet: [`docs/F0R_REVIEW.md`](./F0R_REVIEW.md)
+**F0-R (PR #4) a trecut re-review-ul independent.** PR #4 este încă OPEN și MERGEABLE; verdictul complet este în [`docs/F0R_REVIEW.md`](./F0R_REVIEW.md). Merge-ul îl face numai proprietarul repo-ului.
 
 Cele trei defecte blocante din F0 sunt rezolvate și verificate comportamental, nu doar prin citirea codului:
 
@@ -16,7 +16,7 @@ kill-switch ARMED → place_order()       → success=False, "kill-switch ARMED"
 crypto_dust_sweep(confirmed="true")     → ExecutionForbidden                   ✅
 "crypto_dust_sweep" in register_tools() → False                                ✅
 82 teste + 45 teste de securitate       → verzi, reconfirmate independent      ✅
-scaner cu defectul B1 reintrodus        → 3 teste roșii, în 2 scenarii         ✅
+defectul B1 reintrodus temporar         → 5 teste roșii; worktree restaurat    ✅
 ```
 
 C15, C16, C17, C18, C20, C22 — închise.
@@ -28,7 +28,7 @@ C15, C16, C17, C18, C20, C22 — închise.
 # FAZA ACTIVĂ: F1 — Merge & Consolidare Quant Engine
 
 **Branch:** `codex/phase1-quant-consolidation`
-**Precondiție:** PR #4 merged în `main`. Nu începe înainte.
+**Precondiție dură:** PR #4 trebuie să fie merged în `main` de proprietarul repo-ului. Nu începe implementarea F1 înainte de acest merge și nu face merge la propriul PR.
 
 ## ⚠️ F1.0 — PRIMUL COMMIT, ÎNAINTE DE ORICE ALTĂ MUNCĂ F1
 
@@ -55,7 +55,7 @@ Aceeași clasă de defect ca B1: o zonă în care scanerul nu se uită, fără n
 3. Test comportamental: apelul fiecărei astfel de metode ridică `ExecutionForbidden`.
 4. **Fixture de regresie** `tests/security/fixtures/regression_c23_unguarded_executor.py.txt` — executor legacy fără guard. Testul afirmă că verificarea îl semnalează. Fără acest fixture, F1.0 nu e acceptat.
 
-**Regulă generală adoptată, valabilă de acum în toate fazele:** orice excludere dintr-un scaner de securitate cere o asertiune care dovedește de ce excluderea e sigură. O listă de excluderi fără test compensatoriu este o zonă oarbă cu documentație.
+**Regulă generală adoptată, valabilă de acum în toate fazele:** orice excludere dintr-un scaner de securitate cere o asertiune care dovedește de ce excluderea e sigură. O listă de excluderi fără test compensatoriu este o zonă oarbă cu documentație. C23 este confirmată deschisă la re-review și nu se poate declara închisă prin simpla existență a guard-urilor.
 
 **DoD F1.0:** cele patru puncte livrate; `pytest tests/security -v` verde cu număr crescut; înlăturarea unui guard dintr-un executor cuarantinat produce test roșu — dovedit, nu presupus.
 

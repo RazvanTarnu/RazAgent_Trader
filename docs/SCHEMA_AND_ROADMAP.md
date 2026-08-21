@@ -4,9 +4,9 @@
 **Data:** 2026-08-21
 **Repo:** `RazvanTarnu/RazAgent_Trader` (privat)
 **Colaborator implementare:** Codex
-**Status repo la ultima actualizare:** `main` @ `1366408`; PR #4 (F0-R) aprobat, 82 teste platformă + 45 teste securitate verzi.
+**Status repo la ultima actualizare:** `main` @ `8fc7483`; PR #4 (F0-R) aprobat prin review, încă deschis și nemerged; 82 teste platformă + 45 teste securitate verzi pe branch-ul de remediere.
 
-> **🟢 STARE CURENTĂ (2026-08-21, 09:15): F0-R APROBAT (PR #4). F1 DEBLOCAT — front activ, cu F1.0 (C23) obligatoriu primul.**
+> **🟢 STARE CURENTĂ (2026-08-21, 09:18): F0-R APROBAT prin re-review (PR #4 încă deschis). F1 are front specificat, dar nu începe înainte de merge-ul PR #4; F1.0 (C23) rămâne obligatoriu primul.**
 > Verdicte: [`docs/F0_REVIEW.md`](./F0_REVIEW.md) (F0 respins) · [`docs/F0R_REVIEW.md`](./F0R_REVIEW.md) (F0-R aprobat) · Task-uri concrete: [`docs/WORK_FRONT.md`](./WORK_FRONT.md)
 
 > **REGULI NENEGOCIABILE ALE ACESTUI DOCUMENT**
@@ -354,7 +354,7 @@ Scop: încheie ce F0 nu a încheiat și face containment-ul **demonstrabil**, nu
 
 **DoD F0-R:** vezi [`docs/WORK_FRONT.md`](./WORK_FRONT.md). Condiția dură: scanerul de securitate semnalează fixture-ul de regresie și raportează zero violări pe repo.
 
-**STATUS F0-R: 🟢 APROBAT (2026-08-21, PR #4 @ `6449556`).** Toate cele șase task-uri livrate. Verificat independent: 82 + 45 teste verzi; kill-switch blochează efectiv `place_order`; `crypto_dust_sweep` ridică `ExecutionForbidden` și e dezînregistrat din `register_tools()`; scanerul devine roșu în 3 teste la reintroducerea defectului B1, în două scenarii independente. Un report obligatoriu: **C23 → F1.0**. Vezi [`docs/F0R_REVIEW.md`](./F0R_REVIEW.md).
+**STATUS F0-R: APROBAT prin re-review (2026-08-21, PR #4 @ `6449556`).** Toate cele șase task-uri livrate. Verificarea independentă a rulat `pip install -q -r requirements.txt`, `python -m pytest tests/ -q` (82 passed) și `python -m pytest tests/security -q` (45 passed). Guard-urile au fost executate comportamental: kill-switch ARMED blochează `place_order` pe Binance și KuCoin, `crypto_dust_sweep` ridică `ExecutionForbidden`, endpoint-urile financiare sunt refuzate, iar tool-urile interzise lipsesc din registry. Defectul B1 a fost reintrodus temporar prin restaurarea versiunii pre-F0-R a lui `dust_sweeper.py`; suita de securitate a devenit roșie cu 5 teste eșuate, apoi worktree-ul a fost restaurat cu `git checkout -- .`. **C23 nu este închis**: excluderea celor doi executori legacy are în continuare nevoie de asertiune compensatorie; este primul commit F1.0. PR #4 rămâne deschis și nu se face merge de către Perplexity. Vezi [`docs/F0R_REVIEW.md`](./F0R_REVIEW.md).
 
 ### FAZA 1 — MERGE & CONSOLIDARE QUANT ENGINE · P0 · [dep: F0-R] · ⏳ **FRONT ACTIV**
 
