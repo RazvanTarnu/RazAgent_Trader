@@ -1,15 +1,13 @@
-"""Binance Live Trading Safeguards — V10.44
+"""Legacy trading limit aliases (mode lives only in PlatformConfig).
 
 HARDCODED SAFEGUARDS — DO NOT MODIFY WITHOUT MANUAL APPROVAL.
 Any change requires CEO Backend restart + Telegram confirmation.
 
-PAPER_MODE = True until Razvan activates via /trading_activate.
 """
 
 # ═══════════════════════════════════════════════════════
 # SAFEGUARDS — NU MODIFICA FARA APROBARE MANUALA
 # ═══════════════════════════════════════════════════════
-PAPER_MODE            = True      # 2026-04-17: forced True for hard restart (CEO-approved). Was False. Re-arm via /trading_activate.
 from shared.config import (
     MAX_TRADE_SIZE_USD,
     MAX_DAILY_LOSS_USD,

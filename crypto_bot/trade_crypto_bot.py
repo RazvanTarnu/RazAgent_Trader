@@ -280,11 +280,9 @@ async def cmd_status(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if chat_id != CHAT_ID:
         return
     try:
-        # V11.52: Reload config to get latest state (hot-reload safe)
-        import importlib
-        import shared.binance_live_config as _cfg
-        importlib.reload(_cfg)
-        PAPER_MODE = _cfg.PAPER_MODE
+        from shared.platform.config import load_platform_config
+        PAPER_MODE = load_platform_config().safety.paper_mode
+        from shared import binance_live_config as _cfg
         MAX_TRADE_SIZE_USD = _cfg.MAX_TRADE_SIZE_USD
         MAX_DAILY_LOSS_USD = _cfg.MAX_DAILY_LOSS_USD
         STOP_LOSS_PCT = _cfg.STOP_LOSS_PCT
@@ -326,79 +324,9 @@ async def cmd_review(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def cmd_trading_activate(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """PIN-protected live trading activation."""
-    chat_id = str(update.effective_chat.id)
-    if chat_id != CHAT_ID:
-        await update.message.reply_text("🔒 Only admin can activate live trading.")
-        return
-    # Delegate to existing implementation
-    from shared.patches.trading_activate import (
-        _get_or_create_pin, _verify_pin, _audit_log,
-    )
-    # V11.52: Reload to get current state
-    import importlib
-    import shared.binance_live_config as _live_cfg
-    importlib.reload(_live_cfg)
-    PAPER_MODE = _live_cfg.PAPER_MODE
-
-    text = (update.message.text or "").strip()
-    parts = text.split()
-
-    if len(parts) < 2:
-        if PAPER_MODE:
-            pin_str, is_new = _get_or_create_pin()
-            if is_new:
-                await update.message.reply_text(
-                    f"🔐 Trading in PAPER MODE.\n\n"
-                    f"PIN activare: <code>{pin_str}</code>\n"
-                    f"Comanda: /trading_activate {pin_str}",
-                    parse_mode="HTML",
-                )
-                _audit_log("PIN generated on TradeCrypto bot")
-            else:
-                await update.message.reply_text(
-                    "🔐 PAPER MODE activ. PIN deja generat.\n"
-                    "Folosește: /trading_activate <PIN>",
-                )
-        else:
-            await update.message.reply_text("⚡ LIVE TRADING deja activ.")
-        return
-
-    user_pin = parts[1].strip()
-    if not _verify_pin(user_pin):
-        _audit_log(f"Invalid PIN attempt: {user_pin[:3]}***", "error")
-        await update.message.reply_text("❌ PIN incorect.")
-        return
-
-    try:
-        config_file = PROJECT_ROOT / "shared" / "binance_live_config.py"
-        content = config_file.read_text(encoding="utf-8")
-        new_content = content.replace(
-            "PAPER_MODE            = True",
-            "PAPER_MODE            = False",
-        )
-        config_file.write_text(new_content, encoding="utf-8")
-
-        # V11.52: Hot-reload config module — no restart needed
-        import importlib
-        import shared.binance_live_config as _cfg_mod
-        importlib.reload(_cfg_mod)
-        logger.info(f"[LIVE] Config hot-reloaded: PAPER_MODE={_cfg_mod.PAPER_MODE}")
-
-        _audit_log("LIVE TRADING ACTIVATED via TradeCrypto bot (hot-reloaded)")
-        await update.message.reply_text(
-            "⚡ <b>LIVE TRADING ACTIVAT</b>\n\n"
-            "Safeguards active:\n"
-            "  💰 Max $7/trade\n"
-            "  🛑 Max $20 loss/zi\n"
-            "  📉 SL 2% obligatoriu\n"
-            "  📊 Max 3 poziții simultane\n\n"
-            "✅ Configurație aplicată instant (fără restart).\n"
-            "Sistemul tranzacționează acum cu fonduri reale.",
-            parse_mode="HTML",
-        )
-    except Exception as e:
-        await update.message.reply_text(f"❌ Activare eșuată: {e}")
+    """Reject LIVE activation unconditionally in the paper-only build."""
+    from shared.patches.trading_activate import cmd_trading_activate as reject_live
+    await reject_live(update, context)
 
 
 # ═══════════════════════════════════════════════════════
@@ -580,14 +508,11 @@ async def _preflight_ip_watchdog() -> None:
         return
 
     if result.get("changed"):
-        try:
-            import shared.binance_live_config as _cfg
-            _cfg.PAPER_MODE = True
-        except Exception as exc:
-            logger.warning("Could not force PAPER_MODE after IP change: %s", exc)
+        from shared.execution.kill_switch import persist_armed
+        persist_armed()
         logger.warning(
             "ip_watchdog: public IP rotated — PAPER_MODE forced. "
-            "Update KuCoin/Binance whitelist, then /trading_activate to re-enable live."
+            "Exchange access remains read-only; kill-switch armed."
         )
     else:
         logger.info("ip_watchdog preflight: %s", result.get("reason"))
