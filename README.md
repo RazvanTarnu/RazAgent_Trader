@@ -18,6 +18,7 @@
 |------|---------|
 | `crypto_bot/trade_crypto_bot.py` | Telegram bot (@TradeCrypto13_bot), polling mode |
 | `legacy/trading_intelligence_v1/` | Quarantined v1 prediction engine, OHLCV, smart exits, executors |
+| `trading_intelligence/` | Quant engine (research only — backtest, features, swarm). No execution. |
 | `skills/crypto_swarm/` | 3-agent debate (Fundamentals / Technical / Risk) |
 | `shared/` | Keyring loader, trade journal, approval gate, config |
 | `metrics_server.py` | FastAPI :9100 — read-only metrics for supervisor (created at F2.4) |
