@@ -4,7 +4,10 @@
 **Data:** 2026-08-21
 **Repo:** `RazvanTarnu/RazAgent_Trader` (privat)
 **Colaborator implementare:** Codex
-**Status repo la momentul auditului:** `main` @ `9bb5c81`, 117 fișiere versionate, ~18.6k LOC Python, 37 teste platformă verzi.
+**Status repo la ultima actualizare:** `main` @ `f3da9ab` (PR #3, F0 merged), 44 teste platformă + 7 teste securitate verzi.
+
+> **🔴 STARE CURENTĂ (2026-08-21): F0 a fost RESPINS la review post-merge. Frontul activ este F0-R — Containment Remediation. F1 este BLOCAT.**
+> Verdict și dovezi: [`docs/F0_REVIEW.md`](./F0_REVIEW.md) · Task-uri concrete: [`docs/WORK_FRONT.md`](./WORK_FRONT.md)
 
 > **REGULI NENEGOCIABILE ALE ACESTUI DOCUMENT**
 > 1. **PAPER TRADING ONLY** până la un audit ulterior explicit. Nicio execuție reală de ordine. Nici măcar accidental, nici măcar „doar de test”.
@@ -117,6 +120,23 @@ trading_intelligence/           # pachet NOU, separat de skills/trading_intellig
 | **C12** | 🟡 | Fără feature store, fără model registry, fără versionare dataset/model. Rezultatele nu sunt reproductibile. | absent |
 | **C13** | 🟡 | Fără suită `@pytest.mark.live`, fără test care să **demonstreze** că nicio cale nu poate emite un ordin real (test negativ de securitate). | `tests/` |
 | **C14** | ⚪ | README menționează host `DESKTOP-BH3MFQ9` / IP `192.168.1.137`; device-ul activ este `DESKTOP-R7BP6VC`. Documentație de deployment desincronizată. | `README.md` |
+
+### 1.5 Constatări din review-ul F0 (2026-08-21)
+
+Auditul post-merge al PR #3 a descoperit că inventarul inițial (C1–C14) a ratat o cale de execuție financiară. Detalii complete în [`docs/F0_REVIEW.md`](./F0_REVIEW.md) §6.
+
+| # | Sev. | Constatare | Locație |
+|---|---|---|---|
+| **C15** | 🔴 | `crypto_dust_sweep()` execută `POST /sapi/v1/asset/dust` real, semnat HMAC, fără paper mode, kill-switch, risk engine sau approval gate. Înregistrat ca tool. | `skills/crypto_swarm/dust_sweeper.py:137-196` |
+| **C16** | 🔴 | Testul de securitate acoperă doar `ccxt` + `create_order`; trece verde peste C15. | `tests/security/test_no_live_execution.py` |
+| **C17** | 🟠 | Kill-switch scris dar niciodată citit; `is_armed()` fără consumator; nimic nu armează la pornire. | `shared/execution/kill_switch.py` |
+| **C18** | 🟠 | Deny-list zero-withdrawal nu conține `asset/dust`, `convert/*`, `margin/*`. | `shared/providers/exchange/base.py:30` |
+| **C19** | 🟠 | `prepare_trade()` scrie în `D:/RazAgent_Enterprise/...` — registru paralel, neauditat, în afara `data_dir`. | `skills/crypto_swarm/trade_executioner.py:7` |
+| **C20** | 🟡 | Refuzurile `ExecutionForbidden` nu emit `AuditEvent`. | toate punctele de cuarantină |
+| **C21** | 🟡 | `crypto_bot/trade_crypto_bot.py:186` importa `backend.razagent_server.*`, prefix inexistent — maschează reachability-ul real. | `crypto_bot/trade_crypto_bot.py:186` |
+| **C22** | 🟡 | `_get_keys()` citește `os.environ` direct, ocolind `shared/platform/secrets.py`. | `skills/crypto_swarm/dust_sweeper.py:16-21` |
+
+**Lecție încorporată în schema:** un test de securitate se validează prin faptul că **devine roșu când reintroduci defectul**, nu prin faptul că e verde. Fiecare fază viitoare cu componență de securitate cere un fixture de regresie.
 
 ---
 
@@ -307,17 +327,43 @@ Scop: să nu mai existe nicio cale prin care sistemul poate emite un ordin real.
 
 **DoD F0:** `pytest tests/security -v` verde; grep manual confirmă zero căi de `create_order` în afara adaptoarelor; `trading_activate` nu mai poate flip-ui modul.
 
-### FAZA 1 — MERGE & CONSOLIDARE QUANT ENGINE · P0 · [dep: F0]
+**STATUS F0: 🔴 RESPINS la review post-merge (2026-08-21).** F0.1, F0.3, F0.4, F0.5 corecte și verificate independent. F0.2 parțial, F0.6 insuficient, F0.7 incomplet. Cauza respingerii: `dust_sweeper.py` execută o conversie de active reală pe cont live, necuarantinată și nedetectată de testul de securitate (C15, C16). Vezi [`docs/F0_REVIEW.md`](./F0_REVIEW.md).
 
-| ID | Task |
-|---|---|
-| 1.1 | Review PR #2 (`cursor/quant-engine-b60c`) contra acestei scheme; verifică absența importurilor de execuție din `trading_intelligence/*`. |
-| 1.2 | Rezolvă ambiguitatea de nume: `skills/trading_intelligence/` (legacy) vs `trading_intelligence/` (nou) → redenumește legacy în `legacy/trading_intelligence_v1/`. |
-| 1.3 | Merge PR #2 în `main` după 1.1–1.2. |
-| 1.4 | Adaugă `numpy`, `pandas`, `pyarrow`, `duckdb`, `hypothesis` în `requirements.txt`. |
-| 1.5 | CI (GitHub Actions): `pytest tests/ -v` + testul de securitate pe fiecare push. |
+### FAZA 0-R — CONTAINMENT REMEDIATION · P0 · **FRONT ACTIV** · [dep: F0]
 
-**DoD F1:** un singur pachet quant, teste verzi în CI, zero import de execuție din research.
+Scop: încheie ce F0 nu a încheiat și face containment-ul **demonstrabil**, nu declarat.
+
+| ID | Task | Rezolvă |
+|---|---|---|
+| 0R.1 | Neutralizează `dust_sweeper`: `crypto_dust_sweep` ridică `ExecutionForbidden` necondiționat; `_binance_request` doar GET; zero `hmac` în fișier; scos din `register_tools()`; citirile trec prin factory | C15, C22 |
+| 0R.2 | Inventar exhaustiv de acțiuni financiare pe tot repo-ul (hosturi de bursă, semnare, HTTP care mută stare, alias-uri ccxt, endpoint-uri financiare, indirecție), documentat inclusiv cu fișierele găsite curate | previne următorul C15 |
+| 0R.3 | Rescrie testul de securitate: 7 verificări noi + **fixture de regresie** care reproduce pattern-ul `dust_sweeper` și pe care scanerul trebuie să îl semnaleze | C16 |
+| 0R.4 | Conectează kill-switch-ul: armat în `lifecycle` la pornire, consultat în `place_order` și `prepare_trade`, expus în `/metrics` | C17 |
+| 0R.5 | Extinde deny-list-ul de endpoint-uri financiare | C18 |
+| 0R.6 | `AuditEvent` la fiecare refuz `ExecutionForbidden` | C20 |
+
+**DoD F0-R:** vezi [`docs/WORK_FRONT.md`](./WORK_FRONT.md). Condiția dură: scanerul de securitate semnalează fixture-ul de regresie și raportează zero violări pe repo.
+
+### FAZA 1 — MERGE & CONSOLIDARE QUANT ENGINE · P0 · [dep: **F0-R**] · 🔒 BLOCATĂ
+
+Re-planificată după auditul PR #2. Granița research ↔ execuție pe branch-ul `cursor/quant-engine-b60c` a fost verificată și este **curată**: niciun import de `ccxt`, `keyring`, `shared.providers.exchange`, `shared.execution`, approval gate sau ordine în `trading_intelligence/*`; singurul acces la rețea este `httpx` către API-ul public CoinGecko.
+
+Cele zece condiții de merge pentru PR #2 (P2-1 … P2-10), cu ordinea de lucru, sunt în [`docs/WORK_FRONT.md`](./WORK_FRONT.md). Sinteză:
+
+| ID | Task | Condiție |
+|---|---|---|
+| 1.1 | Redenumește `skills/trading_intelligence/` → `legacy/trading_intelligence_v1/` (coliziune de import cu pachetul nou) | P2-1 |
+| 1.2 | `CostModel` **obligatoriu** în `BacktestEngine` (fee, spread, slippage); lipsa lui ⇒ excepție, nu rulare gratuită | P2-2 |
+| 1.3 | Intrare la `open(i+1)` + slippage, nu la `close(i)` | P2-3 |
+| 1.4 | Test de leakage cu serie sintetică — dovada afirmației „no look-ahead” | P2-4 |
+| 1.5 | Stop-loss și time-stop în engine | P2-5 |
+| 1.6 | `run_id` + hash config + hash dataset + seed în `BacktestResult` | P2-6 |
+| 1.7 | Repară importul `backend.razagent_server.*` — **doar după F0-R.1** | P2-7 |
+| 1.8 | `numpy`, `pandas`, `pyarrow`, `duckdb`, `hypothesis` în `requirements.txt` | P2-8 |
+| 1.9 | CI + branch protection: `pytest tests/` și `pytest tests/security/` obligatorii | P2-9 |
+| 1.10 | Test permanent care afirmă că `trading_intelligence/` nu importa execuție | P2-10 |
+
+**DoD F1:** un singur pachet quant, teste verzi în CI, zero import de execuție din research, backtest cu costuri realiste.
 
 ### FAZA 2 — DATA PLANE · P0 · [dep: F1]
 
@@ -410,13 +456,14 @@ Trecerea la capital real este **out of scope**. Preconditii minime, documentate 
 ### 4.1 Graful de dependențe
 
 ```
-F0 (containment)
- └─> F1 (merge quant engine)
-      ├─> F2 (data plane) ──> F3 (backtest realist + validare)
-      │                        ├─> F4 (paper broker + gateway) ──> F7 (observabilitate)
-      │                        │                                └─> F5 (risk engine)
-      │                        └─> F6 (semnale/LLM)
-      └─> F8 (guvernanță, paralel)
+F0 (containment) — 🔴 RESPINS la review
+ └─> F0-R (containment remediation) — ⏳ FRONT ACTIV
+      └─> F1 (merge quant engine, 10 condiții PR #2)
+           ├─> F2 (data plane) ──> F3 (backtest realist + validare)
+           │                        ├─> F4 (paper broker + gateway) ──> F7 (observabilitate)
+           │                        │                                └─> F5 (risk engine)
+           │                        └─> F6 (semnale/LLM)
+           └─> F8 (guvernanță, paralel)
 F9 — blocat, nu se începe
 ```
 

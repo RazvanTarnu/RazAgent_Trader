@@ -117,21 +117,38 @@ O faza este „gata” **numai** dacă toate sunt adevărate:
 - [ ] Zero cod în afara scope-ului fazei
 - [ ] `docs/PHASE_N_REPORT.md` scris, inclusiv ce **nu** s-a făcut
 - [ ] Review Perplexity: invariante I1–I8 și regulile S1–S9 intacte
+- [ ] Pentru faze cu componență de securitate: **fixture de regresie** care face scanerul roșu la reintroducerea defectului
 - [ ] Roadmap actualizat
 
 ---
 
 ## 7. Starea curentă
 
+**Actualizat:** 2026-08-21, după review-ul post-merge al F0.
+
 | Element | Stare |
 |---|---|
-| Schema + Roadmap | ✅ scrise (`docs/SCHEMA_AND_ROADMAP.md`) |
+| Schema + Roadmap | ✅ `docs/SCHEMA_AND_ROADMAP.md` |
 | Guvernanță | ✅ acest document |
 | Monitorizare orară a repo-ului | ✅ activă (vezi §8) |
-| **Faza 0 — Containment** | ⏳ **următorul pas al lui Codex** |
-| Faza 1 — Merge quant engine (PR #2) | ⛔ blocată de F0 |
+| Front de lucru curent | ✅ `docs/WORK_FRONT.md` |
+| **Faza 0 — Containment** | 🔴 **RESPINSĂ la review** — PR #3 merged, dar containment incomplet (`docs/F0_REVIEW.md`) |
+| **Faza 0-R — Containment Remediation** | ⏳ **FRONT ACTIV — următorul pas al lui Codex** |
+| Faza 1 — Merge quant engine (PR #2) | ⛔ blocată de F0-R · 10 condiții de merge documentate (P2-1…P2-10) |
 | Fazele 2–8 | ⛔ blocate |
 | Faza 9 — capital real | 🔒 blocată permanent până la audit |
+
+### 7.1 Rezultatul review-ului F0 (2026-08-21)
+
+**Verdict: RESPINS.** F0.1, F0.3, F0.4, F0.5 sunt corecte și au fost verificate independent (44 + 7 teste confirmate rulate local). F0.2 parțial, F0.6 insuficient, F0.7 incomplet.
+
+**Defect blocant:** `skills/crypto_swarm/dust_sweeper.py` execută `POST /sapi/v1/asset/dust` — o conversie de active reală și ireversibilă pe contul Binance live, semnată HMAC cu credențiale reale, fără paper mode, fără kill-switch, fără risk engine, fără approval gate. Nu folosește `ccxt` și nu apelează `create_order`, deci testul de securitate livrat în F0 trece verde în prezența ei.
+
+Încălcări: I1, I2, I3 · S1, S2, S3, S6, S7.
+
+**Regulă nouă, adoptată din acest eșec — se adaugă la §6 Definition of Done:**
+
+> Un test de securitate se validează prin faptul că **devine roșu când reintroduci defectul**, nu prin faptul că e verde. Orice fază cu componență de securitate livrează un **fixture de regresie** care reproduce defectul și pe care scanerul trebuie să îl semnaleze.
 
 ## 8. Monitorizare automată
 
