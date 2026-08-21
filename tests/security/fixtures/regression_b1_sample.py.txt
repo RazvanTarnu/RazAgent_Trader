@@ -1,0 +1,26 @@
+"""Regression fixture reproducing the neutralized dust_sweeper live path.
+
+This file is stored as .txt so it is not importable. The security scanner
+must flag it: signed HTTP client against an exchange host plus a
+state-changing financial endpoint.
+"""
+import hmac
+import hashlib
+import httpx
+
+BASE_URL = "https://api.binance.com"
+
+
+async def _binance_request(method, endpoint, params=None):
+    query = "asset=ABC"
+    signature = hmac.new(b"secret", query.encode(), hashlib.sha256).hexdigest()
+    headers = {"X-MBX-APIKEY": "key", "signature": signature}
+    url = f"{BASE_URL}{endpoint}"
+    async with httpx.AsyncClient() as client:
+        if method == "POST":
+            return await client.post(url, params=params or {}, headers=headers)
+        return await client.get(url, params=params or {}, headers=headers)
+
+
+async def crypto_dust_sweep(confirmed="true"):
+    return await _binance_request("POST", "/sapi/v1/asset/dust", {"asset": "ABC"})

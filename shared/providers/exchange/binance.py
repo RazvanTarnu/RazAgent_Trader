@@ -25,6 +25,7 @@ from shared.providers.exchange.base import (
     parse_order_book,
     parse_order_result,
     parse_ticker,
+    reject_if_kill_switch_armed,
     validate_url_safety,
     with_retry,
 )
@@ -110,6 +111,9 @@ class BinanceAdapter(ExchangeProvider):
         return parse_ohlcv(raw)
 
     async def place_order(self, request: OrderRequest) -> OrderResult:
+        blocked = reject_if_kill_switch_armed(self.name)
+        if blocked is not None:
+            return blocked
         if self._paper_mode:
             return OrderResult(
                 success=True,

@@ -25,15 +25,26 @@ logger = logging.getLogger("platform.exchange")
 
 T = TypeVar("T")
 
-# Immutable guard — blocks withdrawal/transfer endpoints
+# Immutable guard — blocks withdrawal, transfer, conversion, and related endpoints
 _FORBIDDEN = frozenset({
     "withdraw", "transfer", "capital/withdraw", "inner-transfer",
     "sub-account/transfer", "universal-transfer",
+    "asset/dust", "asset/convert", "convert/", "margin/", "futures/",
+    "lending/", "staking/", "sub-account/", "simple-earn/", "loan/",
 })
 
 
 class ExchangeSecurityError(Exception):
     """Raised when a forbidden endpoint is attempted."""
+
+
+def reject_if_kill_switch_armed(exchange: str) -> OrderResult | None:
+    """Block financial actions when the persisted kill-switch is ARMED."""
+    from shared.execution.kill_switch import is_armed
+
+    if is_armed():
+        return OrderResult(success=False, exchange=exchange, error="kill-switch ARMED")
+    return None
 
 
 def validate_url_safety(exchange: str, url: str) -> None:

@@ -142,8 +142,11 @@ class BinanceExecutor(BaseExchangeExecutor):
     async def place_market_order(
         self, symbol: str, side: str, amount_usd: float,
     ) -> OrderResult:
-        from shared.execution import ExecutionForbidden
-        raise ExecutionForbidden("legacy Binance executor is quarantined; paper-only build")
+        from shared.execution import raise_execution_forbidden
+        raise_execution_forbidden(
+            "legacy Binance executor is quarantined; paper-only build",
+            target="BinanceExecutor.place_market_order",
+        )
 
         self._validate_trade(amount_usd)  # pragma: no cover
 

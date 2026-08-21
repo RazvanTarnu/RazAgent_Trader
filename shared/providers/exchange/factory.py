@@ -15,8 +15,11 @@ from shared.providers.exchange.kucoin import KuCoinAdapter
 def create_exchange_adapters(config: PlatformConfig) -> dict[str, ExchangeProvider]:
     """Create enabled exchange adapters for read-only/paper operation."""
     if config.safety.paper_mode is not True:
-        from shared.execution import ExecutionForbidden
-        raise ExecutionForbidden("exchange adapters require paper-only configuration")
+        from shared.execution import raise_execution_forbidden
+        raise_execution_forbidden(
+            "exchange adapters require paper-only configuration",
+            target="create_exchange_adapters",
+        )
     paper = True
     timeout_ms = int(config.exchanges.request_timeout_seconds * 1000)
     retries = config.exchanges.max_retries

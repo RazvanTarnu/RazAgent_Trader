@@ -15,6 +15,7 @@ from typing import Optional
 from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 
+from shared.execution.kill_switch import read_kill_switch
 from shared.keyring_loader import get_credential
 from shared.platform.config import load_platform_config
 from shared.platform.lifecycle import validate_startup
@@ -99,6 +100,7 @@ async def metrics(_: None = Depends(require_auth)) -> JSONResponse:
         "readiness": snap.readiness,
         "process_state": snap.process_state.value,
         "paper_mode": snap.paper_mode,
+        "kill_switch": read_kill_switch().value,
         "provider_status": snap.provider_status,
         "exchange_connectivity": snap.exchange_connectivity,
         "last_market_data_ts": snap.last_market_data_ts.isoformat() if snap.last_market_data_ts else None,

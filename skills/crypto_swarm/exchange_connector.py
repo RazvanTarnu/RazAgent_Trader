@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from shared.execution import ExecutionForbidden
+from shared.execution import raise_execution_forbidden
 from shared.platform.config import load_platform_config
 from shared.providers.exchange.factory import create_exchange_adapters
 
@@ -30,7 +30,10 @@ class ReadOnlyExchange:
         await self._provider.close()
 
     async def place_order(self, *args, **kwargs):
-        raise ExecutionForbidden("orders are unavailable through read-only exchange access")
+        raise_execution_forbidden(
+            "orders are unavailable through read-only exchange access",
+            target="ReadOnlyExchange.place_order",
+        )
 
 
 _exchanges: dict[str, ReadOnlyExchange] | None = None
@@ -41,7 +44,10 @@ def _read_only_exchanges() -> dict[str, ReadOnlyExchange]:
     if _exchanges is None:
         config = load_platform_config()
         if config.safety.paper_mode is not True:
-            raise ExecutionForbidden("non-paper configuration is forbidden")
+            raise_execution_forbidden(
+                "non-paper configuration is forbidden",
+                target="ReadOnlyExchange",
+            )
         _exchanges = {
             name: ReadOnlyExchange(provider)
             for name, provider in create_exchange_adapters(config).items()

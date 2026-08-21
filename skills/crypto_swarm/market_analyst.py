@@ -4,7 +4,7 @@ import os, logging, asyncio
 logger = logging.getLogger("godclaw.crypto.analyst")
 
 # Import exchange connector
-from .exchange_connector import get_exchange, EXCHANGE_CONFIGS
+from .exchange_connector import get_exchange
 
 async def crypto_analyze(exchange_name: str = "binance", base: str = "USDT", **kwargs) -> dict:
     """Analyze portfolio and find micro-trading opportunities."""
