@@ -9,7 +9,7 @@ Binance returns max 1000 candles per request, so for 730 days
 a single request with limit=730 is sufficient.
 
 Usage:
-    from trading_intelligence.historical_ohlcv import fetch_2yr_daily_ohlcv, sync_ohlcv_watchlist
+    from legacy.trading_intelligence_v1.historical_ohlcv import fetch_2yr_daily_ohlcv, sync_ohlcv_watchlist
     data = await fetch_2yr_daily_ohlcv("BTCUSDT")
     await sync_ohlcv_watchlist()
 """

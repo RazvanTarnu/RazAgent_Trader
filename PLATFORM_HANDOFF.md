@@ -292,7 +292,7 @@ Run: `python3 -m pytest tests/ -v`
 
 | Path | Notes |
 |------|-------|
-| `skills/trading_intelligence/exchanges/` | Legacy executors — migrate to new adapters |
+| `legacy/trading_intelligence_v1/exchanges/` | Quarantined legacy executors — migrate to new adapters |
 | `shared/approval_gate.py` | Agent 3 — wire to `ExchangeProvider` |
 | `shared/drawdown_guard.py` | Agent 3 — unchanged |
 | `crypto_bot/trade_crypto_bot.py` | Bot entry — consume platform on init |
@@ -372,7 +372,7 @@ PC supervisor polls read-only endpoints — Agent 3 must not add mutation endpoi
 ## 11. Known Limitations
 
 1. **Live integration tests not included** — require real exchange/API credentials on laptop
-2. **Legacy executors coexist** — `skills/trading_intelligence/exchanges/` not yet migrated
+2. **Legacy executors coexist** — `legacy/trading_intelligence_v1/exchanges/` not yet migrated
 3. **Moonshot direct dormant** — OpenRouter is production path
 4. **Keyring is Windows-centric** — Docker mode uses env vars (`RAZAGENT_DOCKER`)
 5. **FastAPI lifespan** — uses deprecated `@app.on_event("startup")` (functional, warning only)

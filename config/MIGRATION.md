@@ -10,7 +10,7 @@ crypto trading platform on the laptop host.
 | GodClaw (PC) | RazAgent_Trader (laptop) |
 |--------------|--------------------------|
 | `shared/keyring_loader.py` | `shared/keyring_loader.py` (same, scope may differ) |
-| `skills/trading_intelligence/exchanges/` | Legacy executors — use `shared/providers/exchange/` for new code |
+| `legacy/trading_intelligence_v1/exchanges/` | Quarantined legacy executors — use `shared/providers/exchange/` for new code |
 | `shared/config.py` | Legacy SSOT — use `shared/platform/config.py` for platform config |
 | N/A | `metrics_server.py` (new, port 9100) |
 | N/A | `config/default.yaml` + gitignored `config/laptop.yaml` |

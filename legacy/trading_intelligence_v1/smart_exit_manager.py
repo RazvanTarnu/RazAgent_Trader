@@ -18,7 +18,7 @@ DB: Shared_Memory/claude_memory.db (trade_journal table)
 Telegram: TRADE_CRYPTO_BOT_TOKEN / TRADE_CRYPTO_CHAT_ID
 
 Usage:
-    from trading_intelligence.smart_exit_manager import evaluate_open_trades
+    from legacy.trading_intelligence_v1.smart_exit_manager import evaluate_open_trades
     result = await evaluate_open_trades()
 """
 import logging

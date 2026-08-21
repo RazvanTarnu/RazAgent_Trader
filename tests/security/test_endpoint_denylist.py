@@ -6,7 +6,7 @@ from __future__ import annotations
 import pytest
 
 from shared.providers.exchange.base import ExchangeSecurityError, validate_url_safety
-from skills.trading_intelligence.exchanges.base_executor import (
+from legacy.trading_intelligence_v1.exchanges.base_executor import (
     CriticalSecurityException,
     validate_endpoint_safety,
 )

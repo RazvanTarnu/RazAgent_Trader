@@ -1,19 +1,13 @@
 # -*- coding: utf-8 -*-
-"""Trading Intelligence Module V1.0 — 3-Hour Cycle Crypto Research & Prediction System.
+"""Tombstone for the renamed legacy package (P2-1 / C3).
 
-Modules:
-    config              — Constants, DB path, API URLs
-    data_collector      — CoinGecko, Fear & Greed, DeFi TVL fetchers
-    news_aggregator     — CryptoCompare, CryptoPanic, RSS news feeds
-    sentiment_analyzer  — Ollama-based news impact scoring
-    technical_analyzer  — RSI, MA crossover, support/resistance
-    prediction_engine   — LLM-powered directional predictions
-    trade_suggester     — Confidence-filtered trade suggestions
-    trade_executor      — SPOT market execution via exchange_connector
-    report_formatter    — Telegram HTML report builder
-    orchestrator        — 3-hour cycle scheduler
+The former ``skills.trading_intelligence`` tree now lives at
+``legacy.trading_intelligence_v1``. Keeping this module as a hard
+ImportError prevents the old name from silently resolving after the
+quant engine package ``trading_intelligence/`` lands at repo root.
 """
 
-from .orchestrator import TradingIntelligenceOrchestrator
-
-__all__ = ["TradingIntelligenceOrchestrator"]
+raise ImportError(
+    "skills.trading_intelligence was renamed to "
+    "legacy.trading_intelligence_v1 (P2-1 / C3). Update the import."
+)

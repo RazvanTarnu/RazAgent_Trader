@@ -346,6 +346,11 @@ def test_regression_c23_unguarded_executor_is_flagged():
     ), "cancel_order is guarded; flagging it would mean the checker greps the file"
 
 
+def test_old_skills_trading_intelligence_import_is_tombstoned():
+    with pytest.raises(ImportError, match="legacy.trading_intelligence_v1"):
+        importlib.import_module("skills.trading_intelligence")
+
+
 def test_ast_checker_does_not_accept_sibling_guard():
     """A guard on another function must not green-light an unguarded poster."""
     source = (

@@ -17,7 +17,7 @@ Only proposals with consensus score >= 75% go to the Telegram
 Trading Approval Gate (30-min timeout, REJECT on timeout).
 
 Usage:
-    from skills.trading_intelligence.trading_swarm import run_trading_swarm
+    from legacy.trading_intelligence_v1.trading_swarm import run_trading_swarm
 
     result = await run_trading_swarm("BTC")
     # result: {consensus, score, recommendation, analyst_reports, ...}
