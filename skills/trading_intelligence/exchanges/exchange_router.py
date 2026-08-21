@@ -80,8 +80,11 @@ class ExchangeRouter:
         Returns:
             (best_exchange_name or None, list of all scores)
         """
-        from shared.execution import ExecutionForbidden
-        raise ExecutionForbidden("legacy exchange execution is quarantined; paper-only build")
+        from shared.execution import raise_execution_forbidden
+        raise_execution_forbidden(
+            "legacy exchange execution is quarantined; paper-only build",
+            target="ExchangeRouter.get_best_exchange",
+        )
 
         await self.initialize()  # pragma: no cover - quarantined legacy implementation
 

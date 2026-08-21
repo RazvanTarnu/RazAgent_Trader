@@ -2,6 +2,8 @@
 import os, logging, time, json, sqlite3
 from pathlib import Path
 
+from shared.execution import kill_switch as execution_kill_switch
+
 logger = logging.getLogger("godclaw.crypto.executor")
 
 DB_PATH = Path("D:/RazAgent_Enterprise/Shared_Memory/claude_memory.db")
@@ -29,6 +31,8 @@ def _init_db():
 
 async def prepare_trade(exchange_name: str, symbol: str, side: str, amount: float, **kwargs) -> dict:
     """Prepare a trade order (does NOT execute — requires manual approval)."""
+    if execution_kill_switch.is_armed():
+        return {"error": "kill-switch ARMED"}
     _init_db()
     from .exchange_connector import get_exchange
     from .risk_manager import validate_trade
@@ -93,9 +97,12 @@ async def prepare_trade(exchange_name: str, symbol: str, side: str, amount: floa
 
 async def execute_trade(trade_id: int, **kwargs) -> dict:
     """Reject every execution attempt in the paper-only build."""
-    from shared.execution import ExecutionForbidden
+    from shared.execution import raise_execution_forbidden
 
-    raise ExecutionForbidden("live execution not implemented; paper-only build")
+    raise_execution_forbidden(
+        "live execution not implemented; paper-only build",
+        target="crypto_execute_trade",
+    )
 
 async def trade_history(limit: int = 10, **kwargs) -> dict:
     """Get recent trade history."""
@@ -121,6 +128,5 @@ async def trade_history(limit: int = 10, **kwargs) -> dict:
 def register_tools() -> dict:
     return {
         "crypto_prepare_trade": prepare_trade,
-        "crypto_execute_trade": execute_trade,
         "crypto_trade_history": trade_history,
     }

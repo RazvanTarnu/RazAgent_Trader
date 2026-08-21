@@ -60,7 +60,8 @@ def test_parse_order_book():
 
 
 @pytest.mark.asyncio
-async def test_binance_paper_mode_place_order():
+async def test_binance_paper_mode_place_order(monkeypatch):
+    monkeypatch.setattr("shared.execution.kill_switch.is_armed", lambda *a, **k: False)
     adapter = BinanceAdapter(api_key="", api_secret="", paper_mode=True, max_retries=0)
     result = await adapter.place_order(
         OrderRequest(symbol="BTC/USDT", side="buy", order_type="market", quantity=0.001)
@@ -71,7 +72,8 @@ async def test_binance_paper_mode_place_order():
 
 
 @pytest.mark.asyncio
-async def test_binance_missing_credentials_live_fails():
+async def test_binance_missing_credentials_live_fails(monkeypatch):
+    monkeypatch.setattr("shared.execution.kill_switch.is_armed", lambda *a, **k: False)
     adapter = BinanceAdapter(api_key="", api_secret="", paper_mode=False, max_retries=0)
     result = await adapter.place_order(
         OrderRequest(symbol="BTC/USDT", side="buy", order_type="market", quantity=0.001)

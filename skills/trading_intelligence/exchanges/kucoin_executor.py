@@ -352,8 +352,11 @@ class KuCoinExecutor(BaseExchangeExecutor):
     async def place_market_order(
         self, symbol: str, side: str, amount_usd: float,
     ) -> OrderResult:
-        from shared.execution import ExecutionForbidden
-        raise ExecutionForbidden("legacy KuCoin executor is quarantined; paper-only build")
+        from shared.execution import raise_execution_forbidden
+        raise_execution_forbidden(
+            "legacy KuCoin executor is quarantined; paper-only build",
+            target="KuCoinExecutor.place_market_order",
+        )
 
         if self._live_disabled:
             return OrderResult(

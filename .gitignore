@@ -17,6 +17,7 @@ logs/
 # Data / secrets
 config/laptop.yaml
 .env
+data/kill_switch.json
 data/*.db
 data/*.db-wal
 data/*.db-shm

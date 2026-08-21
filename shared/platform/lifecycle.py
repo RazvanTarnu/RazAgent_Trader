@@ -9,6 +9,7 @@ import sys
 from dataclasses import dataclass, field
 from typing import Optional
 
+from shared.execution.kill_switch import ensure_persisted_armed_if_missing_or_invalid
 from shared.platform.config import ConfigValidationError, PlatformConfig, load_platform_config, validate_config
 from shared.platform.interfaces import ProcessState
 from shared.platform.metrics_state import MetricsState
@@ -43,6 +44,8 @@ def validate_startup(*, require_llm: bool = False) -> StartupResult:
     errors: list[str] = []
     warnings: list[str] = []
 
+    ensure_persisted_armed_if_missing_or_invalid()
+
     dep_errors = validate_dependencies()
     errors.extend(dep_errors)
 
@@ -73,6 +76,7 @@ def validate_startup(*, require_llm: bool = False) -> StartupResult:
 
 async def initialize_platform(config: PlatformConfig, metrics: MetricsState) -> None:
     """Initialize providers and update metrics state."""
+    ensure_persisted_armed_if_missing_or_invalid()
     metrics.set_process_state(ProcessState.STARTING)
     metrics.set_paper_mode(config.is_paper_mode)
 

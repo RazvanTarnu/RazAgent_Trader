@@ -39,6 +39,8 @@ _FORBIDDEN_ENDPOINTS = frozenset({
     "mining/hash-transfer", "asset/transfer", "universal-transfer",
     "inner-transfer", "accounts/inner-transfer",
     "accounts/sub-transfer", "sapi/v1/capital",
+    "asset/dust", "asset/convert", "convert/", "margin/", "futures/",
+    "lending/", "staking/", "sub-account/", "simple-earn/", "loan/",
 })
 
 
